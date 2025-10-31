@@ -16,36 +16,35 @@ import matplotlib.pyplot as plt
 
 # 1. Load dataset
 df = pd.read_csv('cleaned_file.csv')
-# Function to normalize hand landmarks while keeping labels unchanged
-def normalize_hand_landmarks(row):
+def normalize_hand_landmarks_3d(row):
     # Step 1: Wrist coordinates (New Origin)
-    x_wrist, y_wrist = row["x1"], row["y1"]
+    x_wrist, y_wrist, z_wrist = row["x1"], row["y1"], row["z1"]
     
     # Step 2: Middle fingertip coordinates (Scaling reference)
-    x_tip, y_tip = row["x9"], row["y9"]
+    x_tip, y_tip, z_tip = row["x9"], row["y9"], row["z9"]
 
-    # Compute scaling factor (distance from wrist to middle fingertip)
-    scale = np.sqrt((x_tip - x_wrist) ** 2 + (y_tip - y_wrist) ** 2)
-    
-    # Avoid division by zero
+    # Compute 3D scaling factor (Euclidean distance)
+    scale = np.sqrt((x_tip - x_wrist) ** 2 + (y_tip - y_wrist) ** 2 + (z_tip - z_wrist) ** 2)
+
     if scale == 0:
-        return row  # Return original if scaling factor is zero
-    
-    # Create a copy to prevent modifying original row
+        return row  # Return original if scale is zero
+
+    # Create a copy to avoid modifying original row
     normalized_row = row.copy()
-    
-    # Normalize all x, y coordinates (excluding labels)
-    for i in range(1, 22):  # Loop through 21 landmarks
+
+    # Normalize all x, y, z coordinates
+    for i in range(1, 22):  # 21 landmarks
         normalized_row[f"x{i}"] = (row[f"x{i}"] - x_wrist) / scale
         normalized_row[f"y{i}"] = (row[f"y{i}"] - y_wrist) / scale
-    
+        normalized_row[f"z{i}"] = (row[f"z{i}"] - z_wrist) / scale
+
     return normalized_row
 
 # Apply normalization to all rows
-df.iloc[:, :-1] = df.iloc[:, :-1].apply(normalize_hand_landmarks, axis=1)
+df.iloc[:, :-1] = df.iloc[:, :-1].apply(normalize_hand_landmarks_3d, axis=1)
 
 # Save the processed dataset
-df.to_csv("normalized_ٍِِِِASL.csv", index=False)
+df.to_csv("normalized_ٍِِِِASL2.csv", index=False)
 from sklearn.preprocessing import LabelEncoder
 label_encoder = LabelEncoder()
 df['letter'] = label_encoder.fit_transform(df['letter'])
